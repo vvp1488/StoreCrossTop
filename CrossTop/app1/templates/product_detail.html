@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}
+<title>Shop Homepage - Start Bootstrap Template</title>
+    <!-- Favicon-->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico"/>
+    <!-- Core theme CSS (includes Bootstrap)-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    {% endblock title %}
+{% block content %}
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a class="link-dark" href="{% url 'base' %}">Главная</a></li>
+      <li class="breadcrumb-item"><a  class="link-dark" href="{% url 'category_detail' slug=product.category.slug %}">{{product.category.name}}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{product.name}}</li>
+  </ol>
+<div class="row mt-3">
+  <div class="col-lg-9 ">
+    <div class="text-center">
+  <h2 style="font:Century Gothic"><b>{{product.name}}</b></h2></div>
+<div id="carouselExampleDark" class="carousel carousel-dark slide" data-bs-ride="carousel">
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+{% for i in product.images.all %}
+
+    <button type="button" data-bs-target="#carouselExampleDark" data-bs-slide-to="{{forloop.counter}}"  aria-label="Slide {{forloop}}"></button>
+
+
+    {% endfor %}
+
+  </div>
+  <div class="carousel-inner mt-0">
+    <div class="carousel-item active">
+      <img src="{{product.main_photo.url}}" class="d-block w-100" alt="0">
+    </div>
+       {% for image in product.images.all %}
+      <div class="carousel-item ">
+      <img src="{{image.image.url}}" class="d-block w-100" alt="{{forloop.counter}}">
+    </div>
+      {% endfor %}
+  </div>
+  <button class="carousel-control-prev"   type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Previous</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    <span class="visually-hidden">Next</span>
+  </button>
+</div>
+</div>
+
+<div class="col">
+<h5 >Описание:</h5>
+  <table class="table" >
+  <tbody>
+    <tr>
+      <th scope="row">Бренд:</th>
+      <td>{{product.brand.name}}</td>
+    </tr>
+  <tr>
+      <th scope="row">Размер:</th>
+      <td>{{product.size}}</td>
+    </tr>
+    <tr>
+      <th scope="row">Сезон:</th>
+      <td>{{product.season}}</td>
+    </tr>
+  <tr>
+      <th scope="row">Цена:</th>
+      <td>{{product.price}} грн.</td>
+    </tr>
+   <tr>
+      <th scope="row">В наличии:</th>
+       {% if product.in_available %}
+      <td><img src="{{logo1.image.url}}"width="20"></td>
+       {% else %}
+       <td><img src="{{logo2.image.url}}"width="20"></td>
+       {% endif %}
+    </tr>
+  </tbody>
+</table>
+
+    <p class="card-text">{{product.description}}</p>
+    <hr>
+    <a href="{% url 'add_to_cart' slug=product.slug %}" class="btn btn-success">Добавить в корзину</a>
+  </div>
+</div>
+{% endblock content %}

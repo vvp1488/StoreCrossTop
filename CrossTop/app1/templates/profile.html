@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="text-center mt-3 mb-3">
+    <h2>История заказов:</h2>
+    <hr>
+</div>
+{% if orders.count %}
+<div class="container">
+<div class="row">
+    <div class="col-md-7">
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Дата заказа</th>
+      <th scope="col">Сумма</th>
+        <th></th>
+    </tr>
+  </thead>
+  <tbody>
+{% for order in orders %}
+    <tr>
+      <th scope="row">{{forloop.counter}}</th>
+      <td>{{order.created_at}}</td>
+
+      <td>{{order.final_price}} грн.</td>
+        <td><button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal{{forloop.counter}}">Информация о заказе</button> </td>
+    </tr>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal{{forloop.counter}}" tabindex="-1" aria-labelledby="exampleModalLabel{{forloop.counter}}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabels{{forloop.counter}}">Полная информация о заказе:</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+          <div class="row">
+              <div class="col-md-4">
+          <h5>Данные покупателя:</h5>
+                  <p>Имя: {{order.first_name}}</p>
+                  <p>Фамилия: {{order.last_name}}</p>
+                  <p>Телефон: {{order.phone}}</p>
+                  <p>Тип заказа: {{order.buying_type}}</p>
+                  <p>Дата заказа: {{order.created_at}}</p>
+                  <p>Количество товара: {{order.cart.total_products}}</p>
+                  <p>Общая цена: <strong>{{order.final_price}} грн.</strong></p>
+                  <p>Статус заказа:<font class="text-success">{{order.status}}</font></p>
+              </div>
+              <div class="col">
+
+                  <h5>Товары:</h5>
+                  <hr>
+                  {% for cart_product in order.cart.products.all %}
+                  <div class="row">
+                      <div class="col-md-7">
+
+                  <ol><li value="{{forloop.counter}}">
+                  <a href="{% url 'product_detail' slug=cart_product.product.slug %}"><strong>{{cart_product.product.name}}</strong></a>
+                      <p>Размер: <strong>{{cart_product.product.size}} eur</strong></p>
+                      <p>Цена: <strong>{{cart_product.product.price}}грн.</strong></p>
+                    </li></ol>
+                    </div>
+
+                  <div class="col">
+                      <span><img class="img-thumbnail img-fluid" src="{{cart_product.product.main_photo.url}}" width="200"></span>
+                  </div>
+                      <hr>
+
+           {% endfor %}
+                  </div>
+
+          </div>
+
+
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+  </tbody>
+</table>
+        </div>
+</div>
+</div>
+
+{% else %}
+<div class="alert alert-primary text-center" role="alert">
+  У вас еще нет заказов.
+</div>
+
+{% endif %}
+{% endblock content %}

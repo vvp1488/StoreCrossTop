@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container">
+    <span class="text-center">
+        <h3>Оформления заказа:</h3>
+    </span>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Название товара</th>
+            <th scope="col">Фото</th>
+            <th scope="col">Размер</th>
+            <th scope="col">Цена</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for cart_product in cart_products %}
+         {% if not cart_product.cart.in_order %}
+        <tr>
+            <th><a href="{{cart_product.product.get_absolute_url}}" class="link-dark text-decoration-none" style="font-size:18px;"> {{cart_product.product.name}}</a></th>
+            <th ><img src="{{cart_product.product.main_photo.url}}" class="img-fluid img-thumbnail" width="250"> </th>
+            <td>{{cart_product.product.size}} eur</td>
+            <td>{{cart_product.product.price}} грн.
+                <a href="{% url 'delete_from_cart' slug=cart_product.product.slug %}" type="button" class="btn btn-danger mt-4">Удалить из корзины</a></td>
+        </tr>
+            {% endif %}
+        {% endfor %}
+        <tr>
+            <th colspan="2">Всего: {{cart.total_products}} шт.</th>
+            <th>Общая сумма:</th>
+            <td><strong>{{cart.final_price}} грн.</strong></td>
+        </tr>
+        </tbody>
+    </table>
+
+    </div>
+<form action="" method="POST">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <input type="submit" class="btn btn-success" value="Оформить заказ">
+
+</form>
+{% endblock content %}

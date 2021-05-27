@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<span class="text-center">
+    <h2>Корзина:</h2></span>
+
+
+{% if not cart.in_order and cart.products.count %}
+<div class="container">
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Название товара</th>
+            <th scope="col">Фото</th>
+            <th scope="col">Размер</th>
+            <th scope="col">Цена</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+
+
+        {% for cart_product in cart_products %}
+        {% if not cart_product.cart.in_order %}
+        <tr>
+            <th><a href="{{cart_product.product.get_absolute_url}}" class="link-dark text-decoration-none " style="font-size:18px;"> {{cart_product.product.name}}</a></th>
+            <th ><img src="{{cart_product.product.main_photo.url}}" class="img-fluid img-thumbnail" width="250"> </th>
+            <td>{{cart_product.product.size}} eur</td>
+            <td>{{cart_product.product.price}} грн.
+                </td>
+            <td><span class="container-fluid"> <a href="{% url 'delete_from_cart' slug=cart_product.product.slug %}" type="button" class="btn btn-danger mt-4">Удалить из корзины</a></span></td>
+        </tr>
+
+        {% endif %}
+        {% endfor %}
+        <tr>
+            <th colspan="2">Всего: {{cart.total_products}} шт.</th>
+            <th>Общая сумма:</th>
+            <td><strong>{{cart.final_price}} грн.</strong></td>
+        </tr>
+
+        </tbody>
+    </table>
+    <div class="d-grid">
+     <a href="{% url 'check_out' %}" class="btn btn-primary mt-2 mb-2" >Перейти к оформлению</a>
+    </div>
+    </div>
+{% else %}
+<div class="container">
+<div class="alert alert-danger " role="alert">
+  У вас пока товаров в корзине, вы можете их добавить прямо сейчас
+</div>
+    <div class="text-center">
+    <a href="{% url 'base' %}"> <button type="button" class="btn btn-success">Посмотреть все товары</button></a></div>
+</div>
+
+{% endif %}
+
+{% endblock content %}

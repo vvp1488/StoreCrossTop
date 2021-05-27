@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<ol class="breadcrumb ">
+    <li class="breadcrumb-item "><a class="link-dark" href="{% url 'base' %}">Главная</a></li>
+      <li class="breadcrumb-item active">{{category.name}}</a></li>
+
+  </ol>
+<div class="container">
+  <div class="row">
+{% for product in products %}
+<div class="col mt-3">
+<div class="card" style="width: 18rem;">
+
+  <a href="{% url 'product_detail' slug=product.slug %}"><img src="{{product.main_photo.url}}" class="card-img-top" alt="..."></a>
+  <div class="card-body">
+    <h5 class="card-title"><a  class="link-dark text-decoration-none" href="{% url 'product_detail' slug=product.slug %}"> {{product.name}}</a></h5>
+
+  </div>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item text-center">Фирма:   ----<strong>{{product.brand.name}}</strong>----</li>
+    <li class="list-group-item text-center">Сезон:   ----<strong>{{product.season}}</strong>----</li>
+    <li class="list-group-item text-center">Размер:----<strong>{{product.size}} eur</strong>----</li>
+    <li class="list-group-item text-center">Цена: ----<strong>{{product.price}} грн.</strong>----</li>
+  </ul>
+  <div class="card-body  text-center">
+    <a href="{% url 'add_to_cart' slug=product.slug %}" class="btn btn-success">Добавить в корзину</a>
+  </div>
+</div>
+
+</div>
+{% endfor %}
+    </div>
+  </div>
+{% endblock content %}
