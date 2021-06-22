@@ -38,7 +38,7 @@ class Product(models.Model):
     id = models.AutoField(primary_key=True)
     slug = AutoSlugField(populate_from='id',unique=True)
     name = models.CharField(max_length=255, verbose_name='Название')
-    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, verbose_name='Категория', on_delete=models.CASCADE,related_name='ct')
     brand = models.ForeignKey('Brand', verbose_name='Бренд', on_delete=models.CASCADE)
     gender = models.CharField(max_length=30, verbose_name='Стать', choices=GENDER_CHOICE)
     description = models.TextField(verbose_name='Описание')
@@ -58,10 +58,12 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Продукт'
         verbose_name_plural = 'Продукты'
+        db_table = 'products'
 
 
     def __str__(self):
         return self.name
+
 
 
 class Images(models.Model):
@@ -192,11 +194,4 @@ class Order(models.Model):
         return f'Дата заказа {self.id} на сумму : {self.final_price} грн'
 
 
-
-class NewLogo(models.Model):
-    name = models.CharField(max_length=35)
-    image = models.ImageField()
-
-    def __str__(self):
-        return self.name
 

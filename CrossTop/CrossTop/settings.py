@@ -39,7 +39,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'app1.apps.App1Config',
-    'crispy_forms'
+    'crispy_forms',
+    'django_filters',
+    'bootstrapform',
+
 
 ]
 
@@ -74,25 +77,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'CrossTop.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#         'NAME': 'cross_top_db2',
-#         'USER' : 'admin',
-#         'PASSWORD': 'admin123',
-#         'HOST' : '127.0.0.1',
-#         'PORT' : 5433
-#     }
-# }
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'cross_top_db2',
+        'USER' : 'admin',
+        'PASSWORD': 'admin123',
+        'HOST' : '127.0.0.1',
+        'PORT' : 5433
     }
 }
+#
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite',
+#     }
+# }
 
 
 # Password validation
@@ -132,13 +134,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static_dev')
+    os.path.join(BASE_DIR, 'static')
 ]
 
 # Default primary key field type

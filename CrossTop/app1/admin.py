@@ -30,5 +30,3 @@ admin.site.register(Cart,CartAdmin)
 admin.site.register(Customer,CustomerAdmin)
 admin.site.register(Order)
 admin.site.register(Brand,BrandAdmin)
-
-admin.site.register(NewLogo)

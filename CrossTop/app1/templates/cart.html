@@ -28,7 +28,7 @@
             <td>{{cart_product.product.size}} eur</td>
             <td>{{cart_product.product.price}} грн.
                 </td>
-            <td><span class="container-fluid"> <a href="{% url 'delete_from_cart' slug=cart_product.product.slug %}" type="button" class="btn btn-danger mt-4">Удалить из корзины</a></span></td>
+            <td><span class="container-fluid"> <a href="{% url 'delete_from_cart' slug=cart_product.product.slug %}" type="button" class="btn btn-outline-danger mt-4">Удалить из корзины</a></span></td>
         </tr>
 
         {% endif %}
@@ -42,7 +42,8 @@
         </tbody>
     </table>
     <div class="d-grid">
-     <a href="{% url 'check_out' %}" class="btn btn-primary mt-2 mb-2" >Перейти к оформлению</a>
+     <a href="{% url 'check_out' %}" class="btn btn-outline-success mt-2 mb-2" >Перейти к оформлению</a>
+        <a href="{% url 'catalog' %}" class="btn btn-primary">Смотреть еще товары</a>
     </div>
     </div>
 {% else %}

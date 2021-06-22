@@ -2,20 +2,14 @@ from django.views.generic.detail import SingleObjectMixin
 from django.views.generic import View
 from .models import *
 from django.contrib.auth import get_user_model
+from.filters import NavbarFilter
 
 User = get_user_model()
 
 class BaseMixin():
-    print('test')
     categories = Category.objects.all()
-    logo = NewLogo.objects.get(pk=1)
-    logo1 = NewLogo.objects.get(pk=2)
-    logo2 = NewLogo.objects.get(pk=3)
     products = Product.objects.all()
     brands = Brand.objects.all()
-
-
-
 
 class CartMixin(View):
 
@@ -41,5 +35,6 @@ class CartMixin(View):
         self.cart = cart
         self.cart_products = cart_products
         self.customer = customer
+        self.navbar_filter = NavbarFilter(self.request.GET, queryset=Product.objects.all())
 
         return super().dispatch(request,*args,**kwargs)

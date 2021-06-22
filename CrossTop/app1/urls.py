@@ -10,13 +10,17 @@ from .views import (
     CategoryDetailView,
     LoginView,
     RegistrationView,
-    ProfileView
+    ProfileView,
+    ProductListView,
+testview
+
+
 )
 
 
 urlpatterns = [
     path('',BaseView.as_view(), name = 'base'),
-    path('products/<str:slug>', DetailProductView.as_view(), name ='product_detail'),
+    path('product/<str:slug>', DetailProductView.as_view(), name ='product_detail'),
     path('cart/', CartView.as_view(), name='cart'),
     path('add-to-cart/<str:slug>', AddToCartView.as_view(), name='add_to_cart'),
     path('delete-from-cart/<str:slug>', DeleteFromCartView.as_view(), name='delete_from_cart'),
@@ -25,5 +29,9 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('registration/', RegistrationView.as_view(), name='registration'),
     path('logout/', LogoutView.as_view(next_page='/'), name='logout'),
-    path('profile/',ProfileView.as_view(), name='profile')
+    path('profile/',ProfileView.as_view(), name='profile'),
+    path('catalog/', ProductListView.as_view(),name='catalog'),
+    path('test/',testview, name='test'),
+
+
     ]

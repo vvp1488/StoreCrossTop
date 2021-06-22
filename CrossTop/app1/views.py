@@ -1,30 +1,30 @@
 from django.shortcuts import render
-from django.views.generic import View, DetailView
-from .models import Product, Category, Images, CartProduct, Cart, Customer ,Order
-from django.http import HttpResponseRedirect
-from .forms import OrderForm ,LoginForm, RegistrationForm
+from django.views.generic import View, DetailView, ListView
+from .models import Product, Category, Images, CartProduct, Cart, Customer, Order
+from django.http import HttpResponseRedirect, JsonResponse
+from .forms import OrderForm, LoginForm, RegistrationForm
 from .mixins import BaseMixin, CartMixin
 from .utils import recalc_cart
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, get_user_model
+from .filters import ProductFilter, NavbarFilter
 
 User = get_user_model()
 
-#
 from .utils import recalc_cart
 
 
 class BaseView(BaseMixin, CartMixin, View):
 
     def get(self, request, *args, **kwargs):
+        products = Product.objects.order_by('-created_at')[:6]
+
         context = {
-            'products': self.products,
+            'products': products,
             'categories': self.categories,
             'cart': self.cart,
-            'logo': self.logo,
-            'brands' : self.brands,
-
-
+            'navbar_filter': self.navbar_filter,
+            'brands': self.brands,
         }
         return render(request, 'base.html', context)
 
@@ -38,18 +38,11 @@ class DetailProductView(BaseMixin, CartMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['logo'] = self.logo
         context['categories'] = self.categories
-        context['logo1'] = self.logo1
-        context['logo2'] = self.logo2
+        context['navbar_filter'] = self.navbar_filter
         context['cart'] = self.cart
-        context['brands'] =self.brands
+        context['brands'] = self.brands
         return context
-
-    # def post(self,request,*args,**kwargs):
-    #
-    #     product_pk = kwargs.get('pk')
-    #     return HttpResponseRedirect('/')
 
 
 class AddToCartView(BaseMixin, CartMixin, View):
@@ -60,8 +53,9 @@ class AddToCartView(BaseMixin, CartMixin, View):
         if request.user.is_authenticated:
             current_customer = Customer.objects.get(user=request.user)
             cart_product, created = CartProduct.objects.get_or_create(
-            user=current_customer, cart=self.cart, product=product
-        )
+                user=current_customer, cart=self.cart, product=product
+            )
+
             if created:
                 self.cart.products.add(cart_product)
                 recalc_cart(self.cart)
@@ -69,7 +63,7 @@ class AddToCartView(BaseMixin, CartMixin, View):
             messages.add_message(request, messages.INFO, 'Товар успешно добавлен в корзину')
             return HttpResponseRedirect('/cart/')
         else:
-            messages.add_message(request,messages.INFO,'Для покупки нужно сначала войти в личный кабинет')
+            messages.add_message(request, messages.INFO, 'Для покупки нужно сначала войти в личный кабинет')
         return HttpResponseRedirect('/login/')
 
 
@@ -77,7 +71,7 @@ class DeleteFromCartView(BaseMixin, CartMixin, View):
 
     def get(self, request, *args, **kwargs):
         product = Product.objects.get(slug=kwargs.get('slug'))
-        cart_product = CartProduct.objects.get(product=product,cart=self.cart)
+        cart_product = CartProduct.objects.get(product=product, cart=self.cart)
         # print(cart_product)
         cart_product.delete()
         recalc_cart(self.cart)
@@ -89,14 +83,13 @@ class DeleteFromCartView(BaseMixin, CartMixin, View):
 class CartView(BaseMixin, CartMixin, View):
 
     def get(self, request, *args, **kwargs):
-
         context = {
-            'logo': self.logo,
 
             'cart': self.cart,
             'categories': self.categories,
             'cart_products': self.cart_products,
-            'brands': self.brands
+            'brands': self.brands,
+            'navbar_filter': self.navbar_filter,
 
         }
         return render(request, 'cart.html', context)
@@ -112,8 +105,8 @@ class CheckOutView(BaseMixin, CartMixin, View):
             'cart': self.cart,
             'categories': self.categories,
             'cart_products': self.cart_products,
-            'logo':self.logo,
-            'brands': self.brands
+            'brands': self.brands,
+            'navbar_filter': self.navbar_filter,
         }
         return render(request, 'check_out.html', context)
 
@@ -131,11 +124,6 @@ class CheckOutView(BaseMixin, CartMixin, View):
             new_order.comment = form.cleaned_data['comment']
             new_order.customer_id = customer.pk
             new_order.final_price = self.cart.final_price
-
-            #
-            # for item in self.cart_products:
-            #     new_order.products.add(item)
-            #     item.delete()
             new_order.save()
             self.cart.in_order = True
             self.cart.save()
@@ -150,68 +138,126 @@ class CheckOutView(BaseMixin, CartMixin, View):
         return HttpResponseRedirect('/check-out/')
 
 
-class CategoryDetailView(BaseMixin,CartMixin,View):
+class ProductListView(CartMixin, BaseMixin, ListView):
+    model = Product
+    template_name = 'products_by_category.html'
 
-    def get(self,request,*args,**kwargs):
+    def get_context_data(self, *args, **kwargs):
+        min_price = self.request.GET.get('min_price')
+        max_price = self.request.GET.get('max_price')
+        filter = ProductFilter(self.request.GET, queryset=self.get_queryset())
+        if min_price or max_price:
+            if min_price and max_price:
+                filter = ProductFilter(self.request.GET,
+                                       queryset=self.get_queryset().filter(price__range=[min_price, max_price]))
+            elif not min_price :
+                min_price = 0
+                filter = ProductFilter(self.request.GET, queryset=self.get_queryset().filter(price__range=[min_price,max_price]))
+            else :
+                max_price = 5000
+                filter = ProductFilter(self.request.GET,queryset=self.get_queryset().filter(price__range=[min_price, max_price]))
 
+
+        context = super().get_context_data(*args, **kwargs)
+        context['filter'] = filter
+        context['expensive_first'] = ProductFilter(self.request.GET, queryset=filter.order_by_exp_first())
+        context['cheap_first'] = ProductFilter(self.request.GET, queryset=filter.order_by_cheap_first())
+        context['navbar_filter'] = self.navbar_filter
+        context['categories'] = self.categories
+        context['cart'] = self.cart
+        return context
+
+
+class CategoryDetailView(BaseMixin, CartMixin, View):
+
+    def get(self, request, *args, **kwargs):
+        min_price = request.GET.get('min_price')
+        max_price = request.GET.get('max_price')
         category = Category.objects.get(slug=kwargs.get('slug'))
-        products = Product.objects.filter(category=category)
+        filter = ProductFilter(self.request.GET, queryset=Product.objects.filter(category=category.pk))
+        if min_price or max_price:
+            if min_price and max_price:
+                filter = ProductFilter(self.request.GET, queryset=Product.objects.filter(category=category.pk,price__range=[min_price,max_price]))
+            elif not min_price :
+                min_price = 0
+                filter = ProductFilter(self.request.GET, queryset=Product.objects.filter(category=category.pk,
+                                                                                     price__range=[min_price,
+                                                                                                   max_price]))
+            else:
+                max_price = 5000
+                filter = ProductFilter(self.request.GET, queryset=Product.objects.filter(category=category.pk,
+                                                                                         price__range=[min_price,
+                                                                                                       max_price]))
+
         context = {
-            'products' : products,
-            'logo' :self.logo,
-            'categories':self.categories,
-            'brands': self.brands,
-            'category': category
-
+            'categories': self.categories,
+            'filter': filter,
+            'expensive_first': ProductFilter(self.request.GET,queryset=filter.order_by_exp_first()),
+            'cheap_first': ProductFilter(self.request.GET, queryset=filter.order_by_cheap_first()),
+            'navbar_filter': self.navbar_filter,
+            'category': category,
+            'cart': self.cart
         }
-        return render(request,'products_by_category.html',context)
+        return render(request, 'products_by_category.html', context)
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        category = Category.objects.get(slug=kwargs.get('slug'))
+        context['filter'] = ProductFilter(self.request.GET, queryset=self.get_queryset())
+        context['expensive_first'] = ProductFilter(self.request.GET, queryset=self.get_queryset().order_by('price'))
+        context['cheap_first'] = ProductFilter(self.request.GET, queryset=self.get_queryset().order_by('-price'))
+        context['navbar_filter'] = self.navbar_filter
+        context['categories'] = self.categories
+        context['brands'] = self.brands
+        context['category'] = category
+        return context
 
 
-class LoginView(BaseMixin,CartMixin, View):
 
-    def get(self,request,*args,**kwargs):
+class LoginView(BaseMixin, CartMixin, View):
+
+    def get(self, request, *args, **kwargs):
         form = LoginForm(request.POST or None)
         context = {
             'categories': self.categories,
-            'form' : form,
+            'form': form,
             'cart': self.cart,
-            'logo': self.logo
+            'navbar_filter': self.navbar_filter,
         }
-        return render(request,'login.html',context)
+        return render(request, 'login.html', context)
 
-    def post(self,request,*args,**kwargs):
+    def post(self, request, *args, **kwargs):
         form = LoginForm(request.POST or None)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
-            user = authenticate(username=username,password=password)
+            user = authenticate(username=username, password=password)
             if user:
                 login(request, user)
                 return HttpResponseRedirect('/')
         context = {
-            'form':form,
+            'form': form,
             'categories': self.categories,
-            'logo': self.logo,
+
             'cart': self.cart,
 
         }
-        return render(request,'login.html',context)
+        return render(request, 'login.html', context)
 
 
-
-class RegistrationView(BaseMixin,CartMixin,View):
-    def get(self,request,*args,**kwargs):
+class RegistrationView(BaseMixin, CartMixin, View):
+    def get(self, request, *args, **kwargs):
         form = RegistrationForm(request.POST or None)
         context = {
             'form': form,
             'categories': self.categories,
             'cart': self.cart,
-            'logo': self.logo,
+            'navbar_filter': self.navbar_filter,
             'brands': self.brands
         }
-        return render(request,'registration.html',context)
+        return render(request, 'registration.html', context)
 
-    def post(self,request,*args,**kwargs):
+    def post(self, request, *args, **kwargs):
         form = RegistrationForm(request.POST or None)
         if form.is_valid():
             new_user = form.save(commit=False)
@@ -229,28 +275,45 @@ class RegistrationView(BaseMixin,CartMixin,View):
                 username=new_user.username, password=form.cleaned_data['password']
             )
             login(request, user)
-            messages.add_message(request,messages.INFO,f'Пользователь {new_user.username} успешно зарегестрирован!')
+            messages.add_message(request, messages.INFO, f'Пользователь {new_user.username} успешно зарегестрирован!')
             return HttpResponseRedirect('/')
         context = {
-            'form':form,
-            'categories':self.categories,
-            'cart':self.cart,
-            'logo':self.logo,
-            'brands':self.brands,
+            'form': form,
+            'categories': self.categories,
+            'cart': self.cart,
+            'brands': self.brands,
         }
         return render(request, 'registration.html', context)
 
 
-class ProfileView(BaseMixin,CartMixin,View):
+class ProfileView(BaseMixin, CartMixin, View):
 
-    def get(self,request,*args,**kwargs):
+    def get(self, request, *args, **kwargs):
         orders = Order.objects.filter(customer=self.customer)
         context = {
-            'orders' : orders,
-            'logo':self.logo,
-            'categories':self.categories,
+            'orders': orders,
+            'categories': self.categories,
             'brands': self.brands,
-            'cart':self.cart
+            'cart': self.cart,
+            'navbar_filter': self.navbar_filter,
         }
-        return render(request,'profile.html',context)
+        return render(request, 'profile.html', context)
 
+
+def testview(request, *args, **kwargs):
+    if request.POST:
+        min_price = request.POST.get('min_price')
+        max_price = request.POST.get('max_price')
+        if min_price and max_price:
+            context = {
+                'products': Product.objects.raw(
+                    'SELECT * FROM products where price between ' + min_price + ' and ' + max_price + '')
+            }
+        else:
+            return render(request, 'test.html', {})
+        return render(request, 'test.html', context)
+    else:
+        context = {
+            'products': Product.objects.all()
+        }
+        return render(request, 'test.html', context)
